@@ -161,8 +161,27 @@ func gcat(files []string, options Options) error {
 		}
 
 		var last byte
-		for _, char := range dat {
+		lineNumber := 1
+
+		// check if numbering non-empty line numbers, if so, put first one
+		if options.Ob {
+			fmt.Print("     1 ")
+			lineNumber += 1
+		}
+
+		for iChar, char := range dat {
+			var next byte
 			var showNonPrinting bool
+
+			// used for determining if a line is empty
+			if iChar < len(dat)-1 {
+				next = dat[iChar+1]
+			}
+
+			var atEnd bool
+			if iChar == len(dat)-1 {
+				atEnd = true
+			}
 
 			if options.Ov || options.Oe || options.Ot {
 				showNonPrinting = true
@@ -194,7 +213,7 @@ func gcat(files []string, options Options) error {
 					} else {
 						fmt.Print('\t')
 					}
-				} else if char == '\n' {
+				} else if char == '\n' && !atEnd {
 					// TODO: gnu cat has a break here and line count?
 					fmt.Println()
 				} else {
@@ -215,13 +234,20 @@ func gcat(files []string, options Options) error {
 					} else {
 						fmt.Print(string(char))
 					}
-				} else if char == '\n' {
+				} else if char == '\n' && !atEnd {
 					fmt.Println()
 				}
 			}
 
+			if char == '\n' && options.Ob && next != '\n' && !atEnd {
+				fmt.Print("     ", lineNumber, " ")
+				lineNumber += 1
+			}
+
 			last = char
 		}
+
+		fmt.Println() // add empty line to end
 	}
 
 	return nil
