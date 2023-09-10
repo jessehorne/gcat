@@ -40,7 +40,7 @@ type Options struct {
 	OA bool // TODO
 	Ob bool
 	Oe bool // TODO
-	OE bool // TODO
+	OE bool
 	On bool // TODO
 	Os bool // TODO
 	Ot bool // TODO
@@ -174,13 +174,20 @@ func gcat(files []string, options Options) error {
 			var showNonPrinting bool
 
 			// used for determining if a line is empty
-			if iChar < len(dat)-1 {
+			if iChar < len(dat)-2 {
 				next = dat[iChar+1]
 			}
 
 			var atEnd bool
-			if iChar == len(dat)-1 {
+			if iChar == len(dat)-2 {
 				atEnd = true
+			}
+
+			if iChar == len(dat)-1 {
+				if options.OE {
+					fmt.Print("$")
+				}
+				continue
 			}
 
 			if options.Ov || options.Oe || options.Ot {
@@ -214,8 +221,11 @@ func gcat(files []string, options Options) error {
 						fmt.Print('\t')
 					}
 				} else if char == '\n' && !atEnd {
-					// TODO: gnu cat has a break here and line count?
-					fmt.Println()
+					if options.OE {
+						fmt.Print("$\n")
+					} else {
+						fmt.Print("\n")
+					}
 				} else {
 					fmt.Print('^')
 					fmt.Print(string(char - 128 + 64))
@@ -235,7 +245,11 @@ func gcat(files []string, options Options) error {
 						fmt.Print(string(char))
 					}
 				} else if char == '\n' && !atEnd {
-					fmt.Println()
+					if options.OE {
+						fmt.Print("$\n")
+					} else {
+						fmt.Print("\n")
+					}
 				}
 			}
 
