@@ -38,7 +38,7 @@ For more information, please visit https://github.com/jessehorne
 // See validSingleArgs for details on each option. O* where * is the option. Example, OA means the -A option.
 type Options struct {
 	OA bool // TODO
-	Ob bool // TODO
+	Ob bool
 	Oe bool // TODO
 	OE bool // TODO
 	On bool // TODO
