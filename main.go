@@ -109,7 +109,7 @@ func getOptions(o string) ([]string, error) {
 		}
 
 		if !foundValidOpt {
-			return opts, errors.New(fmt.Sprintf("invalid option %s", string(c)))
+			return opts, errors.New(fmt.Sprintf("gcat: invalid option -- %s\nTry 'gcat --help' for more information.", string(c)))
 		}
 	}
 
@@ -312,7 +312,7 @@ func toOptions(opts []string) Options {
 }
 
 func main() {
-	if os.Args[1] == "--help" || os.Args[1] == "-h" {
+	if os.Args[1] == "--help" {
 		fmt.Println(helpMessage)
 		return
 	}
@@ -320,7 +320,6 @@ func main() {
 	files, options, err := parseArgs(os.Args[1:])
 
 	if err != nil {
-		fmt.Println("ERROR")
 		fmt.Println(err)
 	}
 
