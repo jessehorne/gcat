@@ -222,6 +222,9 @@ func gcat(files []string, options Options) error {
 					}
 				} else if char == '\n' && !atEnd {
 					if options.OE {
+						if last == '\r' {
+							fmt.Print("^m")
+						}
 						fmt.Print("$\n")
 					} else {
 						fmt.Print("\n")
@@ -246,6 +249,9 @@ func gcat(files []string, options Options) error {
 					}
 				} else if char == '\n' && !atEnd {
 					if options.OE {
+						if last == '\r' {
+							fmt.Print("^m")
+						}
 						fmt.Print("$\n")
 					} else {
 						fmt.Print("\n")
