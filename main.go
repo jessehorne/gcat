@@ -41,7 +41,7 @@ type Options struct {
 	Oe bool // TODO
 	OE bool
 	On bool
-	Os bool // TODO
+	Os bool
 	Ot bool // TODO
 	OT bool
 	Ou bool // TODO
@@ -168,9 +168,15 @@ func gcat(files []string, options Options) error {
 			lineNumber += 1
 		}
 
+		newLineCount := 0 // used for keeping track of running newlines
+
+		var showNonPrinting bool
+		if options.Ov || options.Oe || options.Ot {
+			showNonPrinting = true
+		}
+
 		for iChar, char := range dat {
 			var next byte
-			var showNonPrinting bool
 
 			// used for determining if a line is empty
 			if iChar < len(dat)-2 {
@@ -187,10 +193,6 @@ func gcat(files []string, options Options) error {
 					fmt.Print("$")
 				}
 				continue
-			}
-
-			if options.Ov || options.Oe || options.Ot {
-				showNonPrinting = true
 			}
 
 			if showNonPrinting {
@@ -220,13 +222,15 @@ func gcat(files []string, options Options) error {
 						fmt.Print('\t')
 					}
 				} else if char == '\n' && !atEnd {
-					if options.OE {
-						if last == '\r' {
-							fmt.Print("^m")
+					if (options.Os && newLineCount < 2) || !options.Os {
+						if options.OE {
+							if last == '\r' {
+								fmt.Print("^m")
+							}
+							fmt.Print("$\n")
+						} else {
+							fmt.Print("\n")
 						}
-						fmt.Print("$\n")
-					} else {
-						fmt.Print("\n")
 					}
 				} else {
 					fmt.Print('^')
@@ -247,13 +251,15 @@ func gcat(files []string, options Options) error {
 						fmt.Print(string(char))
 					}
 				} else if char == '\n' && !atEnd {
-					if options.OE {
-						if last == '\r' {
-							fmt.Print("^m")
+					if (options.Os && newLineCount < 2) || !options.Os {
+						if options.OE {
+							if last == '\r' {
+								fmt.Print("^m")
+							}
+							fmt.Print("$\n")
+						} else {
+							fmt.Print("\n")
 						}
-						fmt.Print("$\n")
-					} else {
-						fmt.Print("\n")
 					}
 				}
 			}
@@ -266,6 +272,12 @@ func gcat(files []string, options Options) error {
 					fmt.Print("     ", lineNumber, " ")
 					lineNumber += 1
 				}
+			}
+
+			if char == '\n' {
+				newLineCount += 1
+			} else {
+				newLineCount = 0
 			}
 
 			last = char

@@ -6,4 +6,4 @@ benchmark:
 
 debug:
 	make compile
-	./build/gcat -n test/1.txt
+	./build/gcat -s test/1.txt
