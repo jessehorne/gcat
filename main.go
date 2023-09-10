@@ -36,16 +36,16 @@ For more information, please visit https://github.com/jessehorne`
 // Options is used to determine what options are currently active
 // See validSingleArgs for details on each option. O* where * is the option. Example, OA means the -A option.
 type Options struct {
-	OA bool // TODO
+	OA bool
 	Ob bool
-	Oe bool // TODO
+	Oe bool
 	OE bool
 	On bool
 	Os bool
-	Ot bool // TODO
+	Ot bool
 	OT bool
-	Ou bool // TODO
-	Ov bool // TODO
+	Ou bool
+	Ov bool
 }
 
 var validSingleArgs = []string{
@@ -283,7 +283,7 @@ func gcat(files []string, options Options) error {
 			last = char
 		}
 
-		fmt.Println() // add empty line to end
+		fmt.Println() // add empty line to end to mimic `cat`
 	}
 
 	return nil
