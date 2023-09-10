@@ -12,7 +12,7 @@ An MIT-licensed [`cat`](https://www.gnu.org/software/coreutils/cat) implementati
 # Installation
 
 ```shell
-go install github.com/jessehorne/gcat
+go install github.com/jessehorne/gcat@latest
 gcat --help
 ```
 
