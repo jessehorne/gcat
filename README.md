@@ -3,6 +3,8 @@ gcat
 
 An MIT-licensed [`cat`](https://www.gnu.org/software/coreutils/cat) implementation written in Go.
 
+*Please Note*: This implementation isn't bug-free yet. There are bugs. I'm working on the ones I know about and I am probably unaware of others.. :)
+
 # Overview
 
 `gcat` is my attempt to further my understanding of Go and of the `cat` command. `gcat` attempts to be a complete implementation of `cat(1)` but I am noting here that much more testing is needed, especially concerning the presence of control characters and of `\r\n` combinations.
