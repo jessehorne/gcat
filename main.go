@@ -31,8 +31,7 @@ Examples:
   cat f - g  Output f's contents, then standard input, then g's contents.
   cat        Copy standard input to standard output.
 
-For more information, please visit https://github.com/jessehorne
-`
+For more information, please visit https://github.com/jessehorne`
 
 // Options is used to determine what options are currently active
 // See validSingleArgs for details on each option. O* where * is the option. Example, OA means the -A option.
@@ -313,6 +312,11 @@ func toOptions(opts []string) Options {
 }
 
 func main() {
+	if os.Args[1] == "--help" || os.Args[1] == "-h" {
+		fmt.Println(helpMessage)
+		return
+	}
+
 	files, options, err := parseArgs(os.Args[1:])
 
 	if err != nil {
