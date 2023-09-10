@@ -40,7 +40,7 @@ type Options struct {
 	Ob bool
 	Oe bool // TODO
 	OE bool
-	On bool // TODO
+	On bool
 	Os bool // TODO
 	Ot bool // TODO
 	OT bool
@@ -163,7 +163,7 @@ func gcat(files []string, options Options) error {
 		lineNumber := 1
 
 		// check if numbering non-empty line numbers, if so, put first one
-		if options.Ob {
+		if options.Ob || options.On {
 			fmt.Print("     1 ")
 			lineNumber += 1
 		}
@@ -258,9 +258,14 @@ func gcat(files []string, options Options) error {
 				}
 			}
 
-			if char == '\n' && options.Ob && next != '\n' && !atEnd {
-				fmt.Print("     ", lineNumber, " ")
-				lineNumber += 1
+			if char == '\n' && !atEnd {
+				if options.Ob && next != '\n' {
+					fmt.Print("     ", lineNumber, " ")
+					lineNumber += 1
+				} else if options.On && !options.Ob {
+					fmt.Print("     ", lineNumber, " ")
+					lineNumber += 1
+				}
 			}
 
 			last = char
