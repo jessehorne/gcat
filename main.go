@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -126,6 +127,12 @@ func parseArgs(args []string) ([]string, []string, error) {
 	for _, a := range args {
 		// determine if arg is a valid option or valid file path
 		if a[0] == '-' {
+			// if it's simple "-" then its a valid "file" to be read later on...aka stdin
+			if a == "-" {
+				files = append(files, a)
+				continue
+			}
+
 			// if so, add it to the list of options if its valid
 			opt, err := getOptions(a)
 			if err != nil {
@@ -151,139 +158,155 @@ func parseArgs(args []string) ([]string, []string, error) {
 	return files, options, nil
 }
 
+// processData takes in the contents of a file along with options and outputs accordingly
+func processData(dat []byte, options Options, lineNumber int) int {
+	var last byte
+
+	// check if numbering non-empty line numbers, if so, put first one
+	if options.Ob || options.On {
+		fmt.Print(fmt.Sprintf("     %d ", lineNumber))
+		lineNumber += 1
+	}
+
+	newLineCount := 0 // used for keeping track of running newlines
+
+	var showNonPrinting bool
+	if options.Ov || options.Oe || options.Ot {
+		showNonPrinting = true
+	}
+
+	for iChar, char := range dat {
+		var next byte
+
+		// used for determining if a line is empty
+		if iChar < len(dat)-2 {
+			next = dat[iChar+1]
+		}
+
+		var atEnd bool
+		if iChar == len(dat)-2 {
+			atEnd = true
+		}
+
+		if iChar == len(dat)-1 {
+			if options.OE {
+				fmt.Print("$")
+			}
+			continue
+		}
+
+		if showNonPrinting {
+			if char >= 32 {
+				if char < 127 {
+					fmt.Print(string(char))
+				} else if char == 127 {
+					fmt.Print("^?")
+				} else {
+					fmt.Print("M-")
+
+					if char >= 128+32 {
+						if char < 128+127 {
+							fmt.Print(string(char - 128))
+						} else {
+							fmt.Print("^?")
+						}
+					} else {
+						fmt.Print("^")
+						fmt.Print(string(char - 128 + 64))
+					}
+				}
+			} else if char == '\t' {
+				if options.OT {
+					fmt.Print("^I")
+				} else {
+					fmt.Print('\t')
+				}
+			} else if char == '\n' && !atEnd {
+				if (options.Os && newLineCount < 2) || !options.Os {
+					if options.OE {
+						if last == '\r' {
+							fmt.Print("^m")
+						}
+						fmt.Print("$\n")
+					} else {
+						fmt.Print("\n")
+					}
+				}
+			} else {
+				fmt.Print('^')
+				fmt.Print(string(char - 128 + 64))
+			}
+		} else {
+			// don't show nonprinting
+			if char == '\t' {
+				if options.OT {
+					fmt.Print("^I")
+				} else {
+					fmt.Print(string(char))
+				}
+			} else if char != '\n' {
+				if char == '\r' && last == '\n' && options.OE {
+					fmt.Println("^M")
+				} else {
+					fmt.Print(string(char))
+				}
+			} else if char == '\n' && !atEnd {
+				if (options.Os && newLineCount < 2) || !options.Os {
+					if options.OE {
+						if last == '\r' {
+							fmt.Print("^m")
+						}
+						fmt.Print("$\n")
+					} else {
+						fmt.Print("\n")
+					}
+				}
+			}
+		}
+
+		if char == '\n' && !atEnd {
+			if options.Ob && next != '\n' {
+				fmt.Print("     ", lineNumber, " ")
+				lineNumber += 1
+			} else if options.On && !options.Ob {
+				fmt.Print("     ", lineNumber, " ")
+				lineNumber += 1
+			}
+		}
+
+		if char == '\n' {
+			newLineCount += 1
+		} else {
+			newLineCount = 0
+		}
+
+		last = char
+	}
+
+	fmt.Println() // add empty line to end to mimic `cat`
+
+	return lineNumber
+}
+
 // gcat takes files and options and outputs the files contents according to the options provided
 func gcat(files []string, options Options) error {
+	lineNumber := 1
 	for _, f := range files {
-		dat, err := os.ReadFile(f)
-		if err != nil {
-			return err
+		if f == "-" {
+			reader := bufio.NewReader(os.Stdin)
+
+			for {
+				dat, _ := reader.ReadBytes('\n')
+				lineNumber = processData(dat, options, lineNumber)
+			}
+		} else {
+			dat, err := os.ReadFile(f)
+			if err != nil {
+				return err
+			}
+
+			lineNumber = processData(dat, options, lineNumber)
 		}
-
-		var last byte
-		lineNumber := 1
-
-		// check if numbering non-empty line numbers, if so, put first one
-		if options.Ob || options.On {
-			fmt.Print("     1 ")
-			lineNumber += 1
-		}
-
-		newLineCount := 0 // used for keeping track of running newlines
-
-		var showNonPrinting bool
-		if options.Ov || options.Oe || options.Ot {
-			showNonPrinting = true
-		}
-
-		for iChar, char := range dat {
-			var next byte
-
-			// used for determining if a line is empty
-			if iChar < len(dat)-2 {
-				next = dat[iChar+1]
-			}
-
-			var atEnd bool
-			if iChar == len(dat)-2 {
-				atEnd = true
-			}
-
-			if iChar == len(dat)-1 {
-				if options.OE {
-					fmt.Print("$")
-				}
-				continue
-			}
-
-			if showNonPrinting {
-				if char >= 32 {
-					if char < 127 {
-						fmt.Print(string(char))
-					} else if char == 127 {
-						fmt.Print("^?")
-					} else {
-						fmt.Print("M-")
-
-						if char >= 128+32 {
-							if char < 128+127 {
-								fmt.Print(string(char - 128))
-							} else {
-								fmt.Print("^?")
-							}
-						} else {
-							fmt.Print("^")
-							fmt.Print(string(char - 128 + 64))
-						}
-					}
-				} else if char == '\t' {
-					if options.OT {
-						fmt.Print("^I")
-					} else {
-						fmt.Print('\t')
-					}
-				} else if char == '\n' && !atEnd {
-					if (options.Os && newLineCount < 2) || !options.Os {
-						if options.OE {
-							if last == '\r' {
-								fmt.Print("^m")
-							}
-							fmt.Print("$\n")
-						} else {
-							fmt.Print("\n")
-						}
-					}
-				} else {
-					fmt.Print('^')
-					fmt.Print(string(char - 128 + 64))
-				}
-			} else {
-				// don't show nonprinting
-				if char == '\t' {
-					if options.OT {
-						fmt.Print("^I")
-					} else {
-						fmt.Print(string(char))
-					}
-				} else if char != '\n' {
-					if char == '\r' && last == '\n' && options.OE {
-						fmt.Println("^M")
-					} else {
-						fmt.Print(string(char))
-					}
-				} else if char == '\n' && !atEnd {
-					if (options.Os && newLineCount < 2) || !options.Os {
-						if options.OE {
-							if last == '\r' {
-								fmt.Print("^m")
-							}
-							fmt.Print("$\n")
-						} else {
-							fmt.Print("\n")
-						}
-					}
-				}
-			}
-
-			if char == '\n' && !atEnd {
-				if options.Ob && next != '\n' {
-					fmt.Print("     ", lineNumber, " ")
-					lineNumber += 1
-				} else if options.On && !options.Ob {
-					fmt.Print("     ", lineNumber, " ")
-					lineNumber += 1
-				}
-			}
-
-			if char == '\n' {
-				newLineCount += 1
-			} else {
-				newLineCount = 0
-			}
-
-			last = char
-		}
-
-		fmt.Println() // add empty line to end to mimic `cat`
 	}
 
 	return nil
