@@ -32,7 +32,7 @@ Examples:
   cat f - g  Output f's contents, then standard input, then g's contents.
   cat        Copy standard input to standard output.
 
-For more information, please visit https://github.com/jessehorne`
+For more information, please visit https://github.com/jessehorne/gcat`
 
 // Options is used to determine what options are currently active
 // See validSingleArgs for details on each option. O* where * is the option. Example, OA means the -A option.
